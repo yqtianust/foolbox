@@ -64,14 +64,25 @@ class MXNetGluonModel(DifferentiableModel):
 
     def predictions_and_gradient(self, image, label):
         import mxnet as mx
+        if len(image.shape) == 3:
+            image = mx.nd.array([image], ctx=self._device)
+
+            # if not isinstance(image, mx.nd.NDArray):
+            #     image = mx.nd.array(image)
+            # if image.shape[0] == 3:
+            #     image = np.rollaxis(image, 2)
+            #     image = np.rollaxis(image, 2, 1)
+            # image = data.transforms.presets.imagenet.transform_eval(image)
+            # if isinstance(image, mx.nd.NDArray):
+            #     image = image.asnumpy()
         image, dpdx = self._process_input(image)
-        label = mx.nd.array([label])
-        data_array = mx.nd.array(image[np.newaxis], ctx=self._device)
+        label = mx.nd.array([label], ctx=self._device)
+        data_array = mx.nd.array(image, ctx=self._device)
         data_array.attach_grad()
         with mx.autograd.record(train_mode=False):
             logits = self._block(data_array)
             loss = mx.nd.softmax_cross_entropy(logits, label)
-            loss.backward()
+            loss.backward(train_mode=False)
         predictions = np.squeeze(logits.asnumpy(), axis=0)
         gradient = np.squeeze(data_array.grad.asnumpy(), axis=0)
         gradient = self._process_gradient(dpdx, gradient)

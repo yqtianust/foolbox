@@ -97,7 +97,7 @@ class Model(ABC):
         p, grad = self._preprocessing(x)
         if hasattr(p, 'dtype'):
             assert p.dtype == x.dtype
-        p = np.asarray(p, dtype=x.dtype)
+        # p = np.asarray(p, dtype=x.dtype)
         assert callable(grad)
         return p, grad
 
